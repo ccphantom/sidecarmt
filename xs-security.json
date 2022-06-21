@@ -1,0 +1,140 @@
+{
+    "xsappname": "sidecarmt",
+    "tenant-mode": "shared",
+    "scopes": [
+        {
+            "name": "$XSAPPNAME.mtcallback",
+            "description": "SaaS Provisioning",
+            "grant-as-authority-to-apps": [
+                "$XSAPPNAME(application,sap-provisioning,tenant-onboarding)"
+            ]
+        },
+        {
+            "name": "$XSAPPNAME.mtdeployment",
+            "description": "SaaS Model Upgrade"
+        },
+        {
+            "name": "$XSAPPNAME.MtxDiagnose",
+            "description": "SaaS Diagnose"
+        },
+        {
+            "name": "uaa.user",
+            "description": "UAA"
+        }
+        ,
+        {
+            "name": "$XSAPPNAME.Viewer",
+            "description": "Viewer"
+        },
+        {
+            "name": "$XSAPPNAME.Admin",
+            "description": "Administrator"
+        }
+        ,
+        {
+            "name": "$XSAPPNAME.ExtendCDS",
+            "description": "Create Extensions"
+        },
+        {
+            "name": "$XSAPPNAME.ExtendCDSdelete",
+            "description": "Delete Extensions"
+        }
+    ],
+    "role-templates": [
+        {
+            "name": "Token_Exchange",
+            "description": "UAA Token Exchange",
+            "scope-references": [
+                "uaa.user"
+            ]
+        }
+        ,
+        {
+            "name": "Viewer",
+            "description": "Viewer",
+            "scope-references": [
+                "$XSAPPNAME.Viewer"
+            ]
+        },
+        {
+            "name": "Admin",
+            "description": "Administrator",
+            "scope-references": [
+                "$XSAPPNAME.Admin"
+            ]
+        }
+        ,
+        {
+            "name": "SaaSAdmin",
+            "description": "SaaS Administrator",
+            "scope-references": [
+                "$XSAPPNAME.mtcallback",
+                "$XSAPPNAME.mtdeployment",
+                "$XSAPPNAME.MtxDiagnose"
+            ]
+        },
+        {
+            "name": "ExtendCDS",
+            "description": "Extension Developer",
+            "scope-references": [
+                "$XSAPPNAME.ExtendCDS"
+            ]
+        },
+        {
+            "name": "ExtendCDSdelete",
+            "description": "Extension Developer - Delete",
+            "scope-references": [
+                "$XSAPPNAME.ExtendCDSdelete"
+            ]
+        }
+    ]
+    ,
+    "role-collections": [
+        {
+            "name": "sidecarmt_Viewer",
+            "description": "Viewing access",
+            "role-template-references": [
+                "$XSAPPNAME.Viewer"
+            ]
+        },
+        {
+            "name": "sidecarmt_Administrator",
+            "description": "Administrative access",
+            "role-template-references": [
+                "$XSAPPNAME.Admin"
+            ]
+        }
+        ,
+        {
+            "name": "sidecarmt_SaaS_Administrator",
+            "description": "SaaS Administrative access",
+            "role-template-references": [
+                "$XSAPPNAME.SaaSAdmin"
+            ]
+        },
+        {
+            "name": "sidecarmt_Extension_Developer",
+            "description": "Extension Development access",
+            "role-template-references": [
+                "$XSAPPNAME.ExtendCDS"
+            ]
+        },
+        {
+            "name": "sidecarmt_Extension_Developer_Delete",
+            "description": "Extension Development Delete access",
+            "role-template-references": [
+                "$XSAPPNAME.ExtendCDSdelete"
+            ]
+        }
+    ]
+    ,
+    "authorities": [
+        "$XSAPPNAME.mtcallback",
+        "$XSAPPNAME.mtdeployment",
+        "$XSAPPNAME.MtxDiagnose"
+    ]
+    ,
+    "oauth2-configuration": {
+        "token-validity": 3600
+    }
+}
