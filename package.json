@@ -16,13 +16,12 @@
     "passport": "^0.4.1",
     "@sap/cds-mtx": "^2",
     "cfenv": "^1",
-
     "debug": "^4.3",
     "express": "^4"
   },
   "devDependencies": {
-    "sqlite3": "^5.0.2"
-    ,"@sap/ux-specification": "^1.96.4"
+    "sqlite3": "^5.0.2",
+    "@sap/ux-specification": "^1.96.4"
   },
   "sapux": [
     "app/resources/fiori"
@@ -80,8 +79,7 @@
               "srv"
             ]
           }
-        }
-        ,
+        },
         {
           "for": "mtx",
           "src": ".",
@@ -126,8 +124,7 @@
             }
           }
         }
-      }
-      ,
+      },
       "db": {
         "[production]": {
           "kind": "hana-cloud"
@@ -138,16 +135,13 @@
         "model": [
           "db",
           "srv"
-        ]
-        ,
+        ],
         "vcap": {
           "label": "service-manager"
         }
-      }
-      ,
+      },
       "multitenancy": true
-      }
-    ,
+    },
     "mtx": {
       "api": {
         "provisioning": true,
@@ -165,10 +159,14 @@
       ],
       "extension-allowlist": [
         {
-          "for": ["sidecarmt.db.Sales"]
+          "for": [
+            "sidecarmt.db.Sales"
+          ]
         },
         {
-          "for": ["CatalogService"],
+          "for": [
+            "CatalogService"
+          ],
           "kind": "service"
         }
       ]
