@@ -22,10 +22,8 @@ connection.properties
 default-*.json
 gen/
 node_modules/
-package-lock.json
-app/package-lock.json
-*/package-lock.json
 target/
+db/data/
 
 # Web IDE, App Studio
 .che/

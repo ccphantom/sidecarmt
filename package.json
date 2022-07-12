@@ -1,7 +1,7 @@
 {
   "name": "sidecarmt",
   "version": "0.0.1",
-  "repository": "<Add your repository here>",
+  "repository": "https://github.com/ccphantom/sidecarmt.git",
   "license": "UNLICENSED",
   "description": "ECO Union Solution Sidecar Business Application",
   "engines": {
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@sap/audit-logging": "^5",
-    "@sap/cds": "^5",
+    "@sap/cds": "^6.0.0",
     "@sap/cds-mtx": "^2",
     "@sap/xsenv": "^3",
     "@sap/xssec": "^3",
@@ -18,7 +18,8 @@
     "express": "^4",
     "generator-sap-partner-eng": "^0.3.11",
     "hdb": "^0.19",
-    "passport": "^0.4.1"
+    "passport": "^0.4.1",
+    "cf-nodejs-logging-support": "^6.10.0"
   },
   "devDependencies": {
     "sqlite3": "^5.0.2",
@@ -161,12 +162,12 @@
       "extension-allowlist": [
         {
           "for": [
-            "sidecarmt.db.Sales"
+            "sidecarmt.db.Unions"
           ]
         },
         {
           "for": [
-            "CatalogService"
+            "UnionService"
           ],
           "kind": "service"
         }

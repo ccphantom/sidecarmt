@@ -3,7 +3,7 @@
     "authenticationMethod": "route",
     "routes": [
         {
-            "source": "^/catalog/(.*)$",
+            "source": "^/service/(.*)$",
             "authenticationType": "xsuaa",
             "scope": "$XSAPPNAME.Viewer",
             "destination": "srv"
