@@ -57,21 +57,12 @@ class CalculateDavisBaconService extends cds.ApplicationService {
     };
   }
 
-  validateInputData(hoursBase, employerBenefitBase) {
+  validateInputData(hoursBase) {
     let passValidation = true;
     let returnMessage = "";
     if (hoursBase.length == 0) {
       passValidation = false;
       returnMessage = "Hour base table is empty";
-
-      return {
-        passValidation,
-        returnMessage,
-      };
-    }
-    if (employerBenefitBase.length == 0) {
-      passValidation = false;
-      returnMessage = "Employer benefit base table is empty";
 
       return {
         passValidation,
@@ -123,7 +114,7 @@ class CalculateDavisBaconService extends cds.ApplicationService {
       let unionBenefit = {
         customerID: customerInfo.customerID,
         workdate: hourBase.workdate,
-        benefitCode: "9B46",
+        benefitCode: "DBWT",
         hours: hourBase.hours,
         rate: "",
         amount: amountDifference,
@@ -145,6 +136,8 @@ class CalculateDavisBaconService extends cds.ApplicationService {
     return {};
   }
   async readDavisBaconRate(customerInfo, hourBase, DavisBacon) {
+    if (hourBase.projectID == undefined) return
+    // const projectID = hourBase.projectID != undefined ? hourBase.projectID : '*'
     const workdate = new Date(hourBase.workdate).toISOString();
     const davisBaconRate =
       await SELECT.one`combinedRate as davisBaconRate`.from(DavisBacon)
@@ -160,12 +153,9 @@ class CalculateDavisBaconService extends cds.ApplicationService {
   async buildDavisBaconResults(customerInfo, davisBaconParametersByEmployee, DavisBacon) {
     let davisBaconResults = [];
     for (const davisBaconParameterByEmployee of davisBaconParametersByEmployee) {
-      const { payPeriodInfo, hoursBase, employerBenefitBase } =
+      let { payPeriodInfo, hoursBase, employerBenefitBase } =
         davisBaconParameterByEmployee;
-      let { passValidation, returnMessage } = this.validateInputData(
-        hoursBase,
-        employerBenefitBase
-      );
+      let { passValidation, returnMessage } = this.validateInputData(hoursBase);
       let davisBaconResult = {};
       if (passValidation == false) {
         davisBaconResult["message"] = returnMessage;
@@ -173,6 +163,9 @@ class CalculateDavisBaconService extends cds.ApplicationService {
         continue;
       }
       davisBaconResult["payPeriodInfo"] = payPeriodInfo;
+      if (employerBenefitBase == undefined) {
+        employerBenefitBase = []
+      }
       let totalHours = this.getTotalHours(hoursBase);
       let totalEmployerPay = this.getTotalEmployerPay(employerBenefitBase);
       let employerPayRate = totalEmployerPay / totalHours;

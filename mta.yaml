@@ -95,10 +95,6 @@ resources:
 
 
 
-
-
-
-
   # --------------------- REGISTRY SERVICE ---------------------
   - name: sidecarmt-registry
   # ------------------------------------------------------------
@@ -130,5 +126,4 @@ resources:
        config:
          acquireTimeoutMillis: max
          polling_timeout_seconds: 480
-
 
