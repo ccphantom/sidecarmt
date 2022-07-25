@@ -70,6 +70,8 @@ type BenefitBase : {
 }
 
 type HourBase : BenefitBase {
+    addToTotalHours: Boolean;
+    isDavisBaconEligible: Boolean;
     percentage : Decimal;
 };
 

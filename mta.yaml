@@ -59,7 +59,7 @@ modules:
       disk-quota: 1024M
       keep-existing-routes: true
     properties:
-      TENANT_HOST_PATTERN: '^(.*)-${space}-${app-name}.${default-domain}'
+      TENANT_HOST_PATTERN: '^(.*)-${space}-${app-name}(-${org}-${space})?.${default-domain}'
     requires:
       - name: sidecarmt-uaa
       - name: srv-api
@@ -106,7 +106,7 @@ resources:
       service-plan: application
       config:
         xsappname: ~{sidecarmt-uaa/XSAPPNAME}
-        appName: sidecarmt
+        appName: sidecarmt-${org}-${space}
         displayName: 'ECO Union Solution'
         description: 'ECO Union Solution Sidecar Business Application'
         category: 'ReachNett SAP Apps'

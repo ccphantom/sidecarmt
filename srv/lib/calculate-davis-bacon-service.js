@@ -11,13 +11,13 @@ class CalculateDavisBaconService extends cds.ApplicationService {
     const db = await cds.connect.to("db");
     const { ConstantParameter } = db.entities("com.reachnett.union");
     const logSwitch = await SELECT.one`value`.from(ConstantParameter).where`parameter = 'LOG'`;
-    if (logSwitch.value == 'ON') {
+    if (!logSwitch && logSwitch.value == 'ON') {
         log.setLoggingLevel("info");
         log.registerCustomFields(["request_body", "response_body"]);  
     }
     let davisBacons = [];
     const { davisBaconParameters } = req.data;
-    if (logSwitch.value == "ON") {
+    if (!logSwitch && logSwitch.value == "ON") {
       log.info("request body", { request_body: davisBaconParameters });
     }
     const customerInfo = davisBaconParameters.customerInfo;
@@ -38,7 +38,7 @@ class CalculateDavisBaconService extends cds.ApplicationService {
       );
       davisBacons.push(davisBacon);
     }
-    if (logSwitch.value == 'ON') {
+    if (!logSwitch && logSwitch.value == 'ON') {
         log.info("response body", { response_body: davisBacons });
     }
     return req.reply({ davisBacons: davisBacons });
@@ -78,7 +78,10 @@ class CalculateDavisBaconService extends cds.ApplicationService {
   getTotalHours(hoursBase) {
     let totalHours = 0;
     hoursBase.forEach((hourBase) => {
-      totalHours = totalHours + parseFloat(hourBase.hours);
+      if (hourBase.addToTotalHours == true) {
+        totalHours = totalHours + parseFloat(hourBase.hours);
+      }
+      
     });
     return totalHours;
   }
@@ -118,6 +121,8 @@ class CalculateDavisBaconService extends cds.ApplicationService {
         hours: hourBase.hours,
         rate: "",
         amount: amountDifference,
+        addToTotalHours: hourBase.addToTotalHours,
+        isDavisBaconEligible: hourBase.isDavisBaconEligible,
         globalUnionCode: hourBase.globalUnionCode,
         globalClassCode: hourBase.globalClassCode,
         globalCraftCode: hourBase.globalCraftCode,
@@ -185,6 +190,9 @@ class CalculateDavisBaconService extends cds.ApplicationService {
   async buildDavisBaconRecords(hoursBase, employerPayRate, customerInfo, DavisBacon) {
     let davisBaconRecords = [];
     for (const hourBase of hoursBase) {
+      if (hourBase.isDavisBaconEligible == false) {
+        continue;
+      }
       const davisBaconRecord = await this.buildDavisBaconRecord(
         hourBase,
         employerPayRate,

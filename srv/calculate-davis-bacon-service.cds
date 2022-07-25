@@ -20,6 +20,12 @@ type DavisBaconParameter : {
     };
 }
 
+type DavisBaconResult : UnionBenefit {
+    addToTotalHours: Boolean;
+    isDavisBaconEligible: Boolean;
+};
+
+
 type DavisBacon : {
     employeeNumber         : String(8);
     davisBaconResults      : array of {
@@ -28,7 +34,7 @@ type DavisBacon : {
             sequenceNumber : String(5);
             payDate : Date
         };
-        davisBaconResult   : array of UnionBenefit
+        davisBaconResult   : array of DavisBaconResult
     }
 }
 
