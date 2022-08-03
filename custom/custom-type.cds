@@ -28,7 +28,7 @@ type UnionBenefit {
     benefitCode     : String(8);
     hours           : Decimal;
     rate            : Decimal;
-    calcMethod     : String(1);
+    calcMethod      : String(1);
     amount          : Decimal;
     globalUnionCode : String(8);
     globalClassCode : String(8);

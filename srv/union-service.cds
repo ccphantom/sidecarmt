@@ -7,8 +7,10 @@ service UnionService {
     entity UnionRates as projection on union.UnionRates;
     entity UnionFringes as projection on union.UnionFringes;
     entity DavisBacon as projection on union.DavisBacon;
+    entity ConstantParameter as projection on union.ConstantParameter;
 
     type userScopes { identified: Boolean; authenticated: Boolean; Viewer: Boolean; Admin: Boolean; ExtendCDS: Boolean; ExtendCDSdelete: Boolean;};
     type userType { user: String; locale: String; tenant: String; scopes: userScopes; };
     function userInfo() returns userType;
+
 }

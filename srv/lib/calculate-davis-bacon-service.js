@@ -8,16 +8,24 @@ class CalculateDavisBaconService extends cds.ApplicationService {
   }
 
   async calculateDavisBacon(req) {
-    const db = await cds.connect.to("db");
-    const { ConstantParameter } = db.entities("com.reachnett.union");
-    const logSwitch = await SELECT.one`value`.from(ConstantParameter).where`parameter = 'LOG'`;
-    if (!logSwitch && logSwitch.value == 'ON') {
+
+    // const db = await cds.connect.to("db");
+    // const { ConstantParameter } = db.entities("com.reachnett.union");
+    // const logSwitch = await SELECT.one`value`.from(ConstantParameter).where`parameter = 'LOG'`;
+
+    const tx = cds.tx(req);
+    const { ConstantParameter } = cds.entities;
+    const us = await cds.connect.to('UnionService');
+    // const logSwitch = await us.read(SELECT.from(ConstantParameter));
+    const logSwitch = await us.read(SELECT.one`value`.from(ConstantParameter).where`parameter = 'LOG'`);
+
+    if (!logSwitch && logSwitch != null && logSwitch.value == 'ON') {
         log.setLoggingLevel("info");
         log.registerCustomFields(["request_body", "response_body"]);  
     }
     let davisBacons = [];
     const { davisBaconParameters } = req.data;
-    if (!logSwitch && logSwitch.value == "ON") {
+    if (!logSwitch && logSwitch != null && logSwitch.value == "ON") {
       log.info("request body", { request_body: davisBaconParameters });
     }
     const customerInfo = davisBaconParameters.customerInfo;
@@ -26,7 +34,8 @@ class CalculateDavisBaconService extends cds.ApplicationService {
     if (passValidation == false) {
       return req.reply(returnMessage);
     }
-    const { DavisBacon } = db.entities("com.reachnett.union");
+    // const { DavisBacon } = db.entities("com.reachnett.union");
+    const { DavisBacon } = cds.entities;
     for (const davisBaconParameter of calculationBase) {
       const { employeeNumber, davisBaconParametersByEmployee } =
         davisBaconParameter;
@@ -38,7 +47,7 @@ class CalculateDavisBaconService extends cds.ApplicationService {
       );
       davisBacons.push(davisBacon);
     }
-    if (!logSwitch && logSwitch.value == 'ON') {
+    if (!logSwitch && logSwitch != null && logSwitch.value == 'ON') {
         log.info("response body", { response_body: davisBacons });
     }
     return req.reply({ davisBacons: davisBacons });
@@ -147,7 +156,9 @@ class CalculateDavisBaconService extends cds.ApplicationService {
     const davisBaconRate =
       await SELECT.one`combinedRate as davisBaconRate`.from(DavisBacon)
         .where`customerID = ${customerInfo.customerID} and
-                                            unionInfoPointer = ${hourBase.sapUNPTR} and
+                                            unionCode = ${hourBase.globalUnionCode} and
+                                            unionCraft = ${hourBase.globalCraftCode} and
+                                            unionClass = ${hourBase.globalClassCode} and 
                                             projectID = ${hourBase.projectID} and
                                             validFrom <= ${workdate} and
                                             validTo >= ${workdate} 

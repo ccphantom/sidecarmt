@@ -8,17 +8,22 @@ class CalculateBenefitService extends cds.ApplicationService {
   }
   async calculateBenefit(req) {
     const payFrequencyMap = this.getPayFrequencyMap();
-    const db = await cds.connect.to("db");
-    const { ConstantParameter } = db.entities("com.reachnett.union");
-    const logSwitch = await SELECT.one`value`.from(ConstantParameter)
-      .where`parameter = 'LOG'`;
-    if (logSwitch.value == "ON") {
+    // const db = await cds.connect.to("db");
+    // const { ConstantParameter } = db.entities("com.reachnett.union");
+    // const logSwitch = await SELECT.one`value`.from(ConstantParameter)
+    //   .where`parameter = 'LOG'`;
+    const tx = cds.tx(req);
+    const { ConstantParameter } = cds.entities;
+    const us = await cds.connect.to('UnionService');
+    const logSwitch = await us.read(SELECT.one`value`.from(ConstantParameter).where`parameter = 'LOG'`);
+    
+    if (!logSwitch && logSwitch != null && logSwitch.value == "ON") {
       log.setLoggingLevel("info");
       log.registerCustomFields(["request_body", "response_body"]);
     }
     let unionBenefits = [];
     const { unionBenefitParameters } = req.data;
-    if (logSwitch.value == "ON") {
+    if (!logSwitch && logSwitch != null && logSwitch.value == "ON") {
       log.info("request body", { request_body: unionBenefitParameters });
     }
     const customerInfo = unionBenefitParameters.customerInfo;
@@ -39,7 +44,7 @@ class CalculateBenefitService extends cds.ApplicationService {
       );
       unionBenefits.push(unionBenefit);
     }
-    if (logSwitch.value == "ON") {
+    if (!logSwitch && logSwitch != null && logSwitch.value == "ON") {
       log.info("response body", { response_body: unionBenefits });
     }
     return req.reply({ unionBenefits: unionBenefits });
@@ -165,6 +170,7 @@ class CalculateBenefitService extends cds.ApplicationService {
     // 3. Read from Database
     const db = await cds.connect.to("db");
     const { UnionFringes } = db.entities("com.reachnett.union");
+    // const { UnionFringes } = cds.entity;
     const criteriaGlobalUnionCode = [
       ...new Set(
         benefitBases.map((element) => {
@@ -317,6 +323,20 @@ class CalculateBenefitService extends cds.ApplicationService {
             b.unionCraft != "*"
           ) {
             return 1;
+          } else if(
+            a.projectID != "*" &&
+            a.unionCode != "*" &&
+            a.unionClass == "*" &&
+            a.unionCraft == "*"
+          ){
+            return -1;
+          } else if (
+            b.projectID != "*" &&
+            b.unionCode != "*" &&
+            b.unionClass == "*" &&
+            b.unionCraft == "*"
+          ) {
+            return 1;
           } else if (
             a.projectID == "*" &&
             a.unionCode != "*" &&
@@ -387,6 +407,7 @@ class CalculateBenefitService extends cds.ApplicationService {
           globalUnionCode: personalBenefit.unionCode,
           globalCraftCode: personalBenefit.unionCraft,
           globalClassCode: personalBenefit.unionClass,
+          projectID: personalBenefit.projectID,
           sapALZNR: benefitBase.sapALZNR,
           sapC1ZNR: benefitBase.sapC1ZNR,
           sapABART: benefitBase.sapABART,
