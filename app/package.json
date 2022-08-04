@@ -3,7 +3,7 @@
         "@sap/approuter": "^11"
     },
     "engines": {
-        "node": "14.x"
+        "node": "16.x"
     },
     "scripts": {
         "custom": "node custom.js",

@@ -5,11 +5,11 @@
   "license": "UNLICENSED",
   "description": "ECO Union Solution Sidecar Business Application",
   "engines": {
-    "node": "14.x"
+    "node": "16.x"
   },
   "dependencies": {
     "@sap/audit-logging": "^5",
-    "@sap/cds": "5.4.5",
+    "@sap/cds": "^6.0.0",
     "@sap/cds-mtx": "^2",
     "@sap/xsenv": "^3",
     "@sap/xssec": "^3",
@@ -129,7 +129,7 @@
       },
       "db": {
         "[production]": {
-          "kind": "hana"
+          "kind": "hana-cloud"
         },
         "[development]": {
           "kind": "sql"
