@@ -139,6 +139,7 @@
         ,
         "redirect-uris": [
             "http://localhost:5000/**",
+            "https://*.*.applicationstudio.cloud.sap/**",
             "https://*.*.trial.applicationstudio.cloud.sap/**",
             "https://*.cfapps.*.hana.ondemand.com/**"
         ]
