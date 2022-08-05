@@ -1,16 +1,22 @@
 const cds = require("@sap/cds");
 var log = require("cf-nodejs-logging-support");
 
-module.exports = function () {
-
-  const { ConstantParameter } = cds.entities;
-
-  this.on("calculateBenefit", async (req) => {
-    const payFrequencyMap = getPayFrequencyMap();
+class CalculateBenefitService extends cds.ApplicationService {
+  async init() {
+    this.on("calculateBenefit", this.calculateBenefit);
+    await super.init();
+  }
+  async calculateBenefit(req) {
+    const payFrequencyMap = this.getPayFrequencyMap();
+    // const db = await cds.connect.to("db");
+    // const { ConstantParameter } = db.entities("com.reachnett.union");
+    // const logSwitch = await SELECT.one`value`.from(ConstantParameter)
+    //   .where`parameter = 'LOG'`;
     const tx = cds.tx(req);
+    const { ConstantParameter } = cds.entities;
     const us = await cds.connect.to('UnionService');
     const logSwitch = await us.read(SELECT.one`value`.from(ConstantParameter).where`parameter = 'LOG'`);
-
+    
     if (!logSwitch && logSwitch != null && logSwitch.value == "ON") {
       log.setLoggingLevel("info");
       log.registerCustomFields(["request_body", "response_body"]);
@@ -22,7 +28,8 @@ module.exports = function () {
     }
     const customerInfo = unionBenefitParameters.customerInfo;
     const calculationBase = unionBenefitParameters.calculationBase;
-    const { passValidation, returnMessage } = validCustomerInfo(customerInfo);
+    const { passValidation, returnMessage } =
+      this.validCustomerInfo(customerInfo);
     if (passValidation == false) {
       return req.reply(returnMessage);
     }
@@ -30,7 +37,7 @@ module.exports = function () {
       const { employeeNumber, unionBenefitParametersByEmployee } =
         unionBenefitParameter;
       let unionBenefit = { employeeNumber: employeeNumber };
-      unionBenefit["unionBenefitResults"] = await buildUnionBenefitResults(
+      unionBenefit["unionBenefitResults"] = await this.buildUnionBenefitResults(
         customerInfo,
         unionBenefitParametersByEmployee,
         payFrequencyMap
@@ -41,9 +48,9 @@ module.exports = function () {
       log.info("response body", { response_body: unionBenefits });
     }
     return req.reply({ unionBenefits: unionBenefits });
-  })
+  }
 
-  function validCustomerInfo(customerInfo) {
+  validCustomerInfo(customerInfo) {
     let passValidation = true;
     let returnMessage = {};
     if (customerInfo.length == 0) {
@@ -57,7 +64,7 @@ module.exports = function () {
     };
   }
 
-  async function buildUnionBenefitResults(
+  async buildUnionBenefitResults(
     customerInfo,
     unionBenefitParametersByEmployee,
     payFrequencyMap
@@ -67,14 +74,14 @@ module.exports = function () {
       let { payPeriodInfo, benefitBase, benefitOverride, benefitCumulation } =
         unionBenefitParameterByEmployee;
 
-      let returnValidation = validateInputData(benefitBase);
+      let returnValidation = this.validateInputData(benefitBase);
       let passValidation = returnValidation.passValidation;
       let returnMessage = returnValidation.returnMessage;
       if (typeof benefitOverride === "undefined") {
         benefitOverride = [];
       }
       if (passValidation == true) {
-        returnValidation = validateBenefitOverride(benefitOverride);
+        returnValidation = this.validateBenefitOverride(benefitOverride);
         passValidation = returnValidation.passValidation;
         returnMessage = returnValidation.returnMessage;
       }
@@ -87,7 +94,7 @@ module.exports = function () {
         continue;
       }
 
-      let unionBenefitRecords = await buildUnionBenefitRecords(
+      let unionBenefitRecords = await this.buildUnionBenefitRecords(
         benefitBase,
         benefitOverride,
         benefitCumulation,
@@ -106,7 +113,7 @@ module.exports = function () {
     return unionBenefitResults;
   }
 
-  function validateInputData(benefitBase) {
+  validateInputData(benefitBase) {
     let passValidation = true;
     let returnMessage = {};
     if (benefitBase.length == 0) {
@@ -125,7 +132,7 @@ module.exports = function () {
     };
   }
 
-  function validateBenefitOverride(benefitOverrides) {
+  validateBenefitOverride(benefitOverrides) {
     let passValidation = true;
     let returnMessage = {};
     if (benefitOverrides.length > 0) {
@@ -149,7 +156,7 @@ module.exports = function () {
     };
   }
 
-  async function buildUnionBenefitRecords(
+  async buildUnionBenefitRecords(
     benefitBases,
     benefitOverride,
     benefitCumulation,
@@ -194,7 +201,7 @@ module.exports = function () {
         JSON.stringify(benefitOverride)
       );
       candidateBenefits = candidateBenefits.filter((benefit) => {
-        const skipMonthlyBenefit = checkMonthlyBenefit(
+        const skipMonthlyBenefit = this.checkMonthlyBenefit(
           benefit,
           payPeriodInfo,
           payFrequencyMap,
@@ -218,7 +225,7 @@ module.exports = function () {
       });
 
       candidatePersonalBenefits = candidatePersonalBenefits.filter((personalBenefit) => {
-        const skipMonthlyBenefit = checkMonthlyBenefit(
+        const skipMonthlyBenefit = this.checkMonthlyBenefit(
           personalBenefit,
           payPeriodInfo,
           payFrequencyMap,
@@ -316,12 +323,12 @@ module.exports = function () {
             b.unionCraft != "*"
           ) {
             return 1;
-          } else if (
+          } else if(
             a.projectID != "*" &&
             a.unionCode != "*" &&
             a.unionClass == "*" &&
             a.unionCraft == "*"
-          ) {
+          ){
             return -1;
           } else if (
             b.projectID != "*" &&
@@ -422,8 +429,8 @@ module.exports = function () {
       });
     });
 
-    unionBenefits = await resolveRoundingIssue(unionBenefits);
-    aFixUnionBenefits = await updateFixUnionBenefits(aFixUnionBenefits);
+    unionBenefits = await this.resolveRoundingIssue(unionBenefits);
+    aFixUnionBenefits = await this.updateFixUnionBenefits(aFixUnionBenefits);
 
     for (const fixUnionBenefit of aFixUnionBenefits) {
       unionBenefits.push(fixUnionBenefit);
@@ -431,7 +438,7 @@ module.exports = function () {
     return unionBenefits;
   }
 
-  async function updateFixUnionBenefits(aFixUnionBenefits) {
+  async updateFixUnionBenefits(aFixUnionBenefits) {
     let aBenefitCountByWageType = [];
     let aUnionBenefits = [];
 
@@ -461,19 +468,19 @@ module.exports = function () {
           oFixUnionBenefit.benefitCode === oBenefitCountByWageType.benefitCode
         ) {
           if (iCount == 0) {
-            iTargetAmount = roundTo2Decimal(
+            iTargetAmount = this.roundTo2Decimal(
               Number(oFixUnionBenefit.amount).toFixed(6)
             );
           }
           iCount = iCount + 1;
           if (iCount < oBenefitCountByWageType.count) {
-            oFixUnionBenefit.amount = roundTo2Decimal(
+            oFixUnionBenefit.amount = this.roundTo2Decimal(
               Number(oFixUnionBenefit.amount / oBenefitCountByWageType.count)
             );
             iTotalAmount = iTotalAmount + oFixUnionBenefit.amount;
           } else {
             // last record
-            oFixUnionBenefit.amount = roundTo2Decimal(
+            oFixUnionBenefit.amount = this.roundTo2Decimal(
               iTargetAmount - iTotalAmount
             );
           }
@@ -484,7 +491,7 @@ module.exports = function () {
     return aUnionBenefits;
   }
 
-  async function resolveRoundingIssue(aUnionBenefits) {
+  async resolveRoundingIssue(aUnionBenefits) {
     let aBenefitGroupByBenefitCode = [];
     for (let oUnionBenefit of aUnionBenefits) {
       const iRecordIndex = aBenefitGroupByBenefitCode.findIndex(
@@ -509,7 +516,7 @@ module.exports = function () {
 
     let aNewUnionBenefits = [];
     for (const oBenefitGroupByBenefitCode of aBenefitGroupByBenefitCode) {
-      const iTargetAmount = roundTo2Decimal(
+      const iTargetAmount = this.roundTo2Decimal(
         Number(oBenefitGroupByBenefitCode.amount).toFixed(6)
       );
       let iTotalAmount = 0;
@@ -520,14 +527,14 @@ module.exports = function () {
         ) {
           iCount = iCount + 1;
           if (iCount < oBenefitGroupByBenefitCode.count) {
-            oUnionBenefit.amount = roundTo2Decimal(
+            oUnionBenefit.amount = this.roundTo2Decimal(
               Number(oUnionBenefit.amount)
             );
             iTotalAmount =
-              iTotalAmount + roundTo2Decimal(Number(oUnionBenefit.amount));
+              iTotalAmount + this.roundTo2Decimal(Number(oUnionBenefit.amount));
           } else {
             // last record
-            oUnionBenefit.amount = roundTo2Decimal(
+            oUnionBenefit.amount = this.roundTo2Decimal(
               Number(iTargetAmount - iTotalAmount)
             );
           }
@@ -537,14 +544,14 @@ module.exports = function () {
     }
     return aNewUnionBenefits;
   }
-  function roundTo2Decimal(number) {
+  roundTo2Decimal(number) {
     if (number > 0) {
       return +(Math.round(number + "e+2") + "e-2");
     } else {
       return -(Math.round(Math.abs(number) + "e+2") + "e-2");
     }
   }
-  function getPayFrequencyMap() {
+  getPayFrequencyMap() {
     return {
       "1POM": 1,
       "2POM": 2,
@@ -553,7 +560,7 @@ module.exports = function () {
       LPOM: "LAST",
     };
   }
-  function checkMonthlyBenefit(
+  checkMonthlyBenefit(
     benefit,
     payPeriodInfo,
     payFrequencyMap,
@@ -573,7 +580,7 @@ module.exports = function () {
         skipMonthlyBenefit = true;
       } else if (payPeriodInfo.periodNumberOfMonth > payFrequency) {
         if (
-          monthlyBenefitHasBeenCalculated(
+          this.monthlyBenefitHasBeenCalculated(
             payPeriodInfo.payDate,
             benefitCumulation,
             benefit.benefitCode
@@ -585,16 +592,16 @@ module.exports = function () {
     }
     return skipMonthlyBenefit;
   }
-  function monthlyBenefitHasBeenCalculated(payDate, benefitCumulations, benefitCode) {
+  monthlyBenefitHasBeenCalculated(payDate, benefitCumulations, benefitCode){
     if ((payDate || '').length > 8 && benefitCumulations != undefined) {
       // const payYear = payDate.substring(0, 4)
       // const payMonth = payDate.substring(6,8)
       for (const benefitCumulation of benefitCumulations) {
         if (benefitCumulation.type == 'M' &&
-          benefitCumulation.benefitCode == benefitCode &&
-          benefitCumulation.beginDate <= payDate &&
-          benefitCumulation.endDate >= payDate
-        ) {
+            benefitCumulation.benefitCode == benefitCode && 
+            benefitCumulation.beginDate <= payDate && 
+            benefitCumulation.endDate >= payDate 
+           ) {
           return true
         }
       }
@@ -602,3 +609,4 @@ module.exports = function () {
     return false
   }
 }
+module.exports = CalculateBenefitService;
